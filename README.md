@@ -1,16 +1,16 @@
-#Health Helper
+# Health Helper
 
 Health Helper is a small PYQT5 application that allows the user to keep track of the nutritional content of the foods 
 they eat, as well as track grocery spending. Health Helper is a personal project created simply to advance my 
 Python programming skills and learn the basics of GUI.
 
-#Built With
+# Built With
 
 PYQT5 5.14: Python bindings for Qt
 
 Python 3.8
 
-#Installation
+# Installation
 
 Clone the project.
 ```bash
@@ -28,7 +28,7 @@ Run the app.
 healthhelper
 ```
 
-#Author
+# Author
 
 Jourdon Floyd
 
@@ -36,7 +36,7 @@ email: jourdonfloyd@gmail.com
 
 GitHub: https://github.com/Floyd-Droid
 
-#License
+# License
 
 This project is licensed under the MIT License - see the 
 LICENSE.md file for details.

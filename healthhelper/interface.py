@@ -3,7 +3,7 @@ UI for the Health Helper application.
 
 Keep track of daily nutrition and track spending on groceries with the Health Helper application.
 The user provides nutrition and cost information for a custom set of food items stored in a
-csv file called the "food dictionary" (FD). This information is used to create other csv files
+csv file called the Food Dictionary (FD). This information is used to create other csv files
 called log files, which store information about how many calories, sugar, etc. the user has had, and how
 much the amount of food costs. The application allows the user to take control over their health and
 grocery spending.
@@ -26,19 +26,19 @@ from PyQt5.QtWidgets import (QMainWindow, QDialog, QWidget, QLineEdit, QPushButt
 # Local imports
 from healthhelper import data
 
-# Initialise globals
+# Set up globals
 # Directory containing this file.
 FILE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Path to the food dictionary csv file.
+# Path to the Food Dictionary csv file.
 FD_PATH = os.path.join(FILE_DIR, '..', 'files', 'food_dictionary.csv')
 
 # Path to the log files directory.
 LOG_FILES_DIR = os.path.join(FILE_DIR, '..', 'files', 'log files')
 
 
-class LogsWin(QMainWindow):
-    """Allow the user to view or edit the contents of a log file, which uses the food dictionary as a source of
+class LogWin(QMainWindow):
+    """Allow the user to view or edit the contents of a log file, which uses the Food Dictionary as a source of
     entry information. The log is a csv file that contains info about the user's food consumption for the day.
     For example, one row in a log file may look like:
 
@@ -48,13 +48,13 @@ class LogsWin(QMainWindow):
     the calories, total fat, saturated fat, trans fat, polyunsaturated fat, monounsaturated fat, cholesterol,
     sodium, total carbohydrate, total dietary fiber, soluble fiber, insoluble fiber, total sugars, added sugars, and
     protein. The last value is the total cost of the entry (12 cents). The 'missing' values are those
-    that were ignored by the user when adding the food item to the food dictionary, since the user is not required to
+    that were ignored by the user when adding the food item to the Food Dictionary, since the user is not required to
     give all info.
 
     For each log entry, the user provides a weight or volume amount corresponding to one of the serving size options
-    stored in the food dictionary. In this example, the user ate 112 grams of spaghetti. The food dictionary would
-    list the corresponding serving size to be 56 grams, so the user ate two servings. Each value in the food
-    dictionary entry for spaghetti is then multiplied by 2 and added to a log file for the specified date.
+    stored in the Food Dictionary. In this example, the user ate 112 grams of spaghetti. The Food Dictionary would
+    list the corresponding serving size to be 56 grams, so the user ate two servings. Each value in the Food
+    Dictionary entry for spaghetti is then multiplied by 2 and added to a log file for the specified date.
     """
 
     def __init__(self, date=datetime.date.today(), geo=None):
@@ -73,12 +73,12 @@ class LogsWin(QMainWindow):
         # Month in 01 - 12 format.
         self.month = self.date.strftime('%m')
         # Month name (January, February, etc.)
-        self.month_str = self.date.strftime('%B')
+        self.month_name = self.date.strftime('%B')
         self.year = str(self.date.year)
 
         # Example log file path for June 12, 2020: /files/log files/2020/06 - June/12.csv
         self.log_file_path = os.path.join(LOG_FILES_DIR, self.year, self.month + ' - '
-                                          + self.month_str, self.day + '.csv')
+                                          + self.month_name, self.day + '.csv')
         self.init_ui()
 
     def init_ui(self):
@@ -86,7 +86,7 @@ class LogsWin(QMainWindow):
         Include a table that displays info about the entries in the log file. Include a table that displays the
         tallied information of all entries as well as the selected entries only. Include buttons that allow
         the user to add or edit log entries, navigate log files, select or unselect all entries, and go to the
-        food dictionary window.
+        Food Dictionary window.
         """
         self.setWindowTitle("View or Edit Logs")
         self.setWindowFlags(Qt.WindowMaximizeButtonHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
@@ -107,35 +107,36 @@ class LogsWin(QMainWindow):
         self.log_date_w = QWidget()
         self.log_date_w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.log_date_layout = QHBoxLayout()
+        self.log_date_w.setLayout(self.log_date_layout)
 
         log_date_label = QLabel('Log date:', self)
-        month_combobox = QComboBox(self)
-        month_combobox.setFixedSize(100, 27)
+        self.month_combobox = QComboBox(self)
+        self.month_combobox.setFixedSize(100, 27)
         month_list = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                       'November', 'December']
-        month_combobox.addItems(month_list)
+        self.month_combobox.addItems(month_list)
 
         # Only allow positive integers for the date input fields.
         validator = QIntValidator()
         validator.setBottom(0)
-        day_textbox = QLineEdit(self)
-        day_textbox.setFixedSize(50, 27)
-        day_textbox.setValidator(validator)
-        year_textbox = QLineEdit(self)
-        year_textbox.setFixedSize(50, 27)
-        year_textbox.setValidator(validator)
+
+        self.day_textbox = QLineEdit(self)
+        self.day_textbox.setFixedSize(50, 27)
+        self.day_textbox.setValidator(validator)
+        self.year_textbox = QLineEdit(self)
+        self.year_textbox.setFixedSize(50, 27)
+        self.year_textbox.setValidator(validator)
 
         self.log_date_layout.addWidget(log_date_label)
-        self.log_date_layout.addWidget(month_combobox)
-        self.log_date_layout.addWidget(day_textbox)
-        self.log_date_layout.addWidget(year_textbox)
-        self.log_date_w.setLayout(self.log_date_layout)
+        self.log_date_layout.addWidget(self.month_combobox)
+        self.log_date_layout.addWidget(self.day_textbox)
+        self.log_date_layout.addWidget(self.year_textbox)
 
         # Set the default log date widget values to the selected or default date.
-        month_combobox.setCurrentIndex(int(self.month) - 1)
+        self.month_combobox.setCurrentIndex(int(self.month) - 1)
         # Convert day to int, then string. For example, 01 becomes 1.
-        day_textbox.setText(str(int(self.day)))
-        year_textbox.setText(self.year)
+        self.day_textbox.setText(str(int(self.day)))
+        self.year_textbox.setText(self.year)
 
         # Add buttons for choosing the log to view or edit.
         # The current date's log is selected by default.
@@ -201,7 +202,7 @@ class LogsWin(QMainWindow):
         if not os.path.exists(self.log_file_path):
             self.log_table.setRowCount(1)
             self.log_table.setColumnCount(1)
-            no_log_item = QTableWidgetItem(f"There is no log file for {self.month_str} {int(self.day)}, {self.year}.")
+            no_log_item = QTableWidgetItem(f"There is no log file for {self.month_name} {int(self.day)}, {self.year}.")
             self.log_table.setItem(0, 0, no_log_item)
             no_log_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -276,8 +277,8 @@ class LogsWin(QMainWindow):
             log_h_header.setSectionResizeMode(QHeaderView.ResizeToContents)
             log_h_header.setSectionResizeMode(0, QHeaderView.Stretch)
 
-        # Add a button that takes the user to the food dictionary view screen.
-        self.goto_fd_btn = QPushButton('Go to food dictionary', self)
+        # Add a button that takes the user to the Food Dictionary view screen.
+        self.goto_fd_btn = QPushButton('Go to Food Dictionary', self)
         self.goto_fd_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         # Add buttons that add or remove entries from the log.
@@ -313,7 +314,16 @@ class LogsWin(QMainWindow):
         self.goto_fd_btn.clicked.connect(self.goto_fd_win)
 
         layout = QGridLayout()
-        spacer = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        # QMainWindow requires the layout to be applied to a widget,
+        # which is then set as the central widget of the window.
+        main_w = QWidget()
+        main_w.setLayout(layout)
+        self.setCentralWidget(main_w)
+
+        spacer1 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer2 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer3 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addWidget(self.help_btn, 0, 0)
         layout.addWidget(self.goto_fd_btn, 0, 1)
         layout.addWidget(self.log_date_w, 0, 3, 1, 2, alignment=Qt.AlignCenter)
@@ -322,9 +332,9 @@ class LogsWin(QMainWindow):
         layout.addWidget(self.next_log_btn, 0, 8)
 
         layout.addWidget(self.log_table, 1, 0, 1, 9)
-        layout.addItem(spacer, 2, 0, 1, 9)
+        layout.addItem(spacer1, 2, 0, 1, 9)
         layout.addWidget(self.totals_table, 3, 0, 1, 9)
-        layout.addItem(spacer, 4, 0, 1, 9)
+        layout.addItem(spacer2, 4, 0, 1, 9)
 
         layout.addWidget(self.select_all_btn, 5, 0)
         layout.addWidget(self.unselect_all_btn, 5, 1)
@@ -332,13 +342,8 @@ class LogsWin(QMainWindow):
         layout.addWidget(self.remove_entries_btn, 5, 4, alignment=Qt.AlignRight)
         layout.addWidget(self.edit_entries_btn, 5, 7)
         layout.addWidget(self.add_entries_btn, 5, 8)
-        layout.addItem(spacer, 6, 0, 1, 9)
+        layout.addItem(spacer3, 6, 0, 1, 9)
 
-        # QMainWindow requires the layout to be applied to a widget,
-        # which is then set as the central widget of the window.
-        main_w = QWidget()
-        main_w.setLayout(layout)
-        self.setCentralWidget(main_w)
         self.setStyleSheet('''
             QMainWindow {
                 background-color: rgb(0, 0, 30);
@@ -361,7 +366,7 @@ class LogsWin(QMainWindow):
                 border-top: 0px solid black;
                 border-bottom: 1px solid black;
                 border-left: 0px solid black;
-                border-right: 1px solid black;   
+                border-right: 1px solid black;
             }
             QHeaderView::section::checked {
                 background-color: rgb(60, 180, 60);
@@ -413,10 +418,10 @@ class LogsWin(QMainWindow):
         """
         info = QLabel("- Enter the date of the log you would like to view or edit, then click 'Change log'. The "
                       "current date is selected by default.\n\n"
-                      "- The food dictionary is used to add entries to a log. To view or edit the food "
-                      "dictionary, click the 'Go to food dictionary' button in the top left of the screen.\n\n"
-                      "- Once you have added entries to the food dictionary, you can click the 'Add entries' button "
-                      "on the log view screen to choose which entries from the food dictionary are added to the log, "
+                      "- The Food Dictionary is used to add entries to a log. To view or edit the food "
+                      "dictionary, click the 'Go to Food Dictionary' button in the top left of the screen.\n\n"
+                      "- Once you have added entries to the Food Dictionary, you can click the 'Add entries' button "
+                      "on the log view screen to choose which entries from the Food Dictionary are added to the log, "
                       "along with the amount to add. You can also experiment with different food combinations "
                       "without adding them to a log, allowing you to plan a meal.\n\n"
                       "- The table below the log table displays the total nutritional information (and cost) of all "
@@ -429,18 +434,18 @@ class LogsWin(QMainWindow):
         info.setWordWrap(True)
         info.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        ok_btn = QPushButton('Ok', self)
-        ok_btn.setFixedSize(75, 27)
-        ok_btn.clicked.connect(self.close_win)
+        self.ok_btn = QPushButton('Ok', self)
+        self.ok_btn.setFixedSize(75, 27)
+        self.ok_btn.clicked.connect(self.close_win)
 
         self.dlg = QDialog(self)
         self.dlg.setWindowTitle('Help')
         self.dlg.setFixedWidth(600)
         help_layout = QVBoxLayout()
-        help_layout.addWidget(info)
-        help_layout.addWidget(ok_btn, alignment=Qt.AlignRight)
-        help_layout.setSpacing(20)
         self.dlg.setLayout(help_layout)
+        help_layout.addWidget(info)
+        help_layout.addWidget(self.ok_btn, alignment=Qt.AlignRight)
+        help_layout.setSpacing(20)
         self.dlg.setStyleSheet('''
             QDialog {
                 background-color: rgb(255, 250, 230);
@@ -499,8 +504,8 @@ class LogsWin(QMainWindow):
             return
 
         current_geo = self.geometry()
-        self.edit_logs_win = LogsWin(new_date, current_geo)
-        self.edit_logs_win.show()
+        self.new_log_win = LogWin(new_date, current_geo)
+        self.new_log_win.show()
         self.close()
 
     def goto_prev_log(self):
@@ -534,8 +539,8 @@ class LogsWin(QMainWindow):
         prev_date = datetime.date(year, month, day)
 
         current_geo = self.geometry()
-        self.next_log_win = LogsWin(prev_date, current_geo)
-        self.next_log_win.show()
+        self.prev_log_win = LogWin(prev_date, current_geo)
+        self.prev_log_win.show()
         self.close()
 
     def goto_next_log(self):
@@ -570,7 +575,7 @@ class LogsWin(QMainWindow):
         next_date = datetime.date(year, month, day)
 
         current_geo = self.geometry()
-        self.next_log_win = LogsWin(next_date, current_geo)
+        self.next_log_win = LogWin(next_date, current_geo)
         self.next_log_win.show()
         self.close()
 
@@ -601,8 +606,8 @@ class LogsWin(QMainWindow):
                     writer.writerows(entries_to_keep)
 
                 current_geo = self.geometry()
-                self.logs_win = LogsWin(self.date, current_geo)
-                self.logs_win.show()
+                self.log_win = LogWin(self.date, current_geo)
+                self.log_win.show()
                 self.close()
 
     def select_all(self):
@@ -655,23 +660,23 @@ class LogsWin(QMainWindow):
         else:
             self.dlg = QDialog(self)
             self.dlg.setFixedWidth(350)
-            message = QLabel(f"Are you sure you want to delete the log for {self.month_str} {self.day}, {self.year}?"
+            message = QLabel(f"Are you sure you want to delete the log for {self.month_name} {self.day}, {self.year}?"
                              f" This can't be undone.", self)
             message.setWordWrap(True)
-            yes_btn = QPushButton("Yes", self)
-            yes_btn.setFixedSize(85, 27)
-            yes_btn.clicked.connect(self.delete_log)
-            no_btn = QPushButton("Nevermind", self)
-            no_btn.setFixedSize(85, 27)
-            no_btn.clicked.connect(self.close_win)
+            self.yes_btn = QPushButton("Yes", self)
+            self.yes_btn.setFixedSize(85, 27)
+            self.yes_btn.clicked.connect(self.delete_log)
+            self.no_btn = QPushButton("Nevermind", self)
+            self.no_btn.setFixedSize(85, 27)
+            self.no_btn.clicked.connect(self.close_win)
             main_layout = QVBoxLayout()
+            self.dlg.setLayout(main_layout)
             btn_layout = QHBoxLayout()
-            btn_layout.addWidget(yes_btn)
-            btn_layout.addWidget(no_btn)
+            btn_layout.addWidget(self.yes_btn)
+            btn_layout.addWidget(self.no_btn)
             main_layout.addWidget(message)
             main_layout.addLayout(btn_layout)
             main_layout.setSpacing(20)
-            self.dlg.setLayout(main_layout)
             self.dlg.setStyleSheet('''
                 QDialog {
                 background-color: rgb(255, 250, 230);
@@ -701,14 +706,14 @@ class LogsWin(QMainWindow):
         # Close the dialog box.
         self.close_win()
         current_geo = self.geometry()
-        self.log_win = LogsWin(self.date, current_geo)
+        self.log_win = LogWin(self.date, current_geo)
         self.log_win.show()
         self.close()
 
     def edit_entries(self):
         """Pass a list of selected log entry names to EditLogWin instance for editing. If no entries are
-        selected, prompt the user to select at least one. It is possible that the user has deleted a food dictionary
-        entry from which a log entry is based on. Check the selected entry names against current food dictionary
+        selected, prompt the user to select at least one. It is possible that the user has deleted a Food Dictionary
+        entry from which a log entry is based on. Check the selected entry names against current Food Dictionary
         entry names, and inform the user if a particular entry no longer exists, and therefore can't be edited.
         """
         checked_entry_names = data.get_table_entry_names(self.log_table)[1]
@@ -730,13 +735,13 @@ class LogsWin(QMainWindow):
                 return
 
         current_geo = self.geometry()
-        self.edit_win = EditLogWin(self.date, self.log_file_path, current_geo, checked_entry_names, edit=True)
-        self.edit_win.show()
+        self.edit_log_win = EditLogWin(self.date, self.log_file_path, current_geo, checked_entry_names, edit=True)
+        self.edit_log_win.show()
         self.close()
 
     def add_entries(self):
-        """Display the contents of the food dictionary and allow the user to select entries to add to a log. If the
-        food dictionary file doesn't exist, tell the user to add entries first.
+        """Display the contents of the Food Dictionary and allow the user to select entries to add to a log. If the
+        Food Dictionary file doesn't exist, tell the user to add entries first.
         """
         if not os.path.exists(FD_PATH):
             self.mess_win = MessageWin('fd file not found (log window)')
@@ -744,8 +749,8 @@ class LogsWin(QMainWindow):
             return
 
         current_geo = self.geometry()
-        self.edit_win = EditLogWin(self.date, self.log_file_path, current_geo, edit=False)
-        self.edit_win.show()
+        self.edit_log_win = EditLogWin(self.date, self.log_file_path, current_geo, edit=False)
+        self.edit_log_win.show()
         self.close()
 
     def close_win(self):
@@ -753,7 +758,7 @@ class LogsWin(QMainWindow):
         self.dlg.close()
 
     def goto_fd_win(self):
-        """Take the user to the food dictionary window."""
+        """Take the user to the Food Dictionary window."""
         current_geo = self.geometry()
         self.fd_win = FoodDictWin(current_geo)
         self.fd_win.show()
@@ -842,9 +847,13 @@ class EditLogWin(QDialog):
         self.back_to_log_win_btn.clicked.connect(self.back_to_log_win)
 
         spacer1 = QSpacerItem(300, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
-        spacer2 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer2 = QSpacerItem(300, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        spacer3 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer4 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addWidget(self.back_to_log_win_btn)
         self.btn_layout.addWidget(self.select_all_btn)
@@ -854,15 +863,14 @@ class EditLogWin(QDialog):
         edit_layout = QHBoxLayout()
         edit_layout.addItem(spacer1)
         edit_layout.addWidget(self.edit_table)
-        edit_layout.addItem(spacer1)
+        edit_layout.addItem(spacer2)
 
         self.main_layout.addWidget(description)
         self.main_layout.addLayout(edit_layout)
-        self.main_layout.addItem(spacer2)
+        self.main_layout.addItem(spacer3)
         self.main_layout.addWidget(self.totals_table)
-        self.main_layout.addItem(spacer2)
+        self.main_layout.addItem(spacer4)
         self.main_layout.addLayout(self.btn_layout)
-        self.setLayout(self.main_layout)
 
         self.edit_table.setColumnCount(3)
         self.edit_table.setHorizontalHeaderLabels(['Name', 'Amount', 'Weight/Volume'])
@@ -926,8 +934,8 @@ class EditLogWin(QDialog):
 
             amount_w = QWidget()
             amount_layout = QHBoxLayout()
-            amount_layout.addWidget(amount_textbox)
             amount_w.setLayout(amount_layout)
+            amount_layout.addWidget(amount_textbox)
             self.edit_table.setCellWidget(i, 1, amount_w)
 
             # QComboBox for the possible units of measurement.
@@ -941,8 +949,8 @@ class EditLogWin(QDialog):
 
             unit_w = QWidget()
             unit_layout = QHBoxLayout()
-            unit_layout.addWidget(combobox)
             unit_w.setLayout(unit_layout)
+            unit_layout.addWidget(combobox)
             self.edit_table.setCellWidget(i, 2, unit_w)
 
             # If the user is editing entries, place the original input into the fields by default.
@@ -1122,7 +1130,7 @@ class EditLogWin(QDialog):
                 writer.writerow(entry)
 
         current_geo = self.geometry()
-        self.log_win = LogsWin(self.date, current_geo)
+        self.log_win = LogWin(self.date, current_geo)
         self.log_win.show()
         self.close()
 
@@ -1156,23 +1164,23 @@ class EditLogWin(QDialog):
             writer.writerows(entries_to_write)
 
         current_geo = self.geometry()
-        self.log_win = LogsWin(self.date, current_geo)
+        self.log_win = LogWin(self.date, current_geo)
         self.log_win.show()
         self.close()
 
     def back_to_log_win(self):
         """Take the user back to the log window."""
         current_geo = self.geometry()
-        self.log_win = LogsWin(self.date, current_geo)
+        self.log_win = LogWin(self.date, current_geo)
         self.log_win.show()
         self.close()
 
 
 class FoodDictWin(QDialog):
-    """Allow the user to view or edit the food dictionary (FD), which is a csv file that stores information about
-    user-input food items. The user pulls information from the food dictionary when adding an entry to a log file.
+    """Allow the user to view or edit the Food Dictionary (FD), which is a csv file that stores information about
+    user-input food items. The user pulls information from the Food Dictionary when adding an entry to a log file.
 
-    For example, one row in the food dictionary file may look like:
+    For example, one row in the Food Dictionary file may look like:
 
     spaghetti,"{'g': '56', 'oz': '2'}",180,1.5,0,0,0,0,0,0,40,6,,,2,0,7,"[1.15, 8]",0.14
 
@@ -1184,7 +1192,7 @@ class FoodDictWin(QDialog):
     total number of servings per container. In this example, one box of spaghetti costs $1.15, and there are 8
     servings per box. The information in this list is used to calculate the last value, which is the cost per
     serving of the entry (1.15 / 8 = 14 cents). The 'missing' values are those that were ignored by the
-    user when adding the entry to the food dictionary, since the user is not required to give all info.
+    user when adding the entry to the Food Dictionary, since the user is not required to give all info.
     """
 
     def __init__(self, geo=None):
@@ -1198,8 +1206,8 @@ class FoodDictWin(QDialog):
         self.init_ui()
 
     def init_ui(self):
-        """Setup UI. Include a table that displays the contents of the food dictionary. Include buttons to allow the
-        user to add, edit, or remove entries from the food dictionary.
+        """Setup UI. Include a table that displays the contents of the Food Dictionary. Include buttons to allow the
+        user to add, edit, or remove entries from the Food Dictionary.
         """
         self.setWindowTitle('View or Edit the Food Dictionary')
         self.setWindowFlags(Qt.WindowMaximizeButtonHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
@@ -1211,7 +1219,7 @@ class FoodDictWin(QDialog):
             self.center()
         else:
             self.setGeometry(self.geo)
-        description = QLabel("Below is the food dictionary, where information about different food items is kept and "
+        description = QLabel("Below is the Food Dictionary, where information about different food items is kept and "
                              "used when managing daily logs. Click the 'Add an entry' button to add a food "
                              "item by providing its name, nutritional content, and (optionally) cost. You can select "
                              "any of the entries and click 'Delete selected entries' to delete them from the food "
@@ -1239,7 +1247,7 @@ class FoodDictWin(QDialog):
         self.add_entry_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # Press Enter to press the 'Add an entry' button
         self.add_entry_btn.setDefault(True)
-        self.add_entry_btn.clicked.connect(self.add_entries_to_fd)
+        self.add_entry_btn.clicked.connect(self.add_entry_to_fd)
         self.delete_selected_entries_btn = QPushButton('Delete selected entries', self)
         self.delete_selected_entries_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.delete_selected_entries_btn.clicked.connect(self.remove_entries_confirmation)
@@ -1251,6 +1259,8 @@ class FoodDictWin(QDialog):
         self.goto_log_win_btn.clicked.connect(self.goto_log_win)
 
         self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addWidget(self.select_all_btn)
         self.btn_layout.addWidget(self.unselect_all_btn)
@@ -1263,14 +1273,13 @@ class FoodDictWin(QDialog):
         self.main_layout.addWidget(description)
         self.main_layout.addWidget(self.fd_table)
         self.main_layout.addLayout(self.btn_layout)
-        self.setLayout(self.main_layout)
         self.main_layout.setSpacing(15)
 
         if not os.path.exists(FD_PATH):
             # The FD doesn't exist, alert the user.
             self.fd_table.setRowCount(1)
             self.fd_table.setColumnCount(1)
-            no_fd_item = QTableWidgetItem("There are currently no entries in the food dictionary. Please click the "
+            no_fd_item = QTableWidgetItem("There are currently no entries in the Food Dictionary. Please click the "
                                           "'Add an entry' button to get started.")
             self.fd_table.setItem(0, 0, no_fd_item)
             no_fd_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
@@ -1399,18 +1408,18 @@ class FoodDictWin(QDialog):
     def goto_log_win(self):
         """Take the user to the log window."""
         current_geo = self.geometry()
-        self.log_win = LogsWin(datetime.date.today(), current_geo)
+        self.log_win = LogWin(datetime.date.today(), current_geo)
         self.log_win.show()
         self.close()
 
-    def add_entries_to_fd(self):
-        """Allow the user to add an entry to the food dictionary file."""
+    def add_entry_to_fd(self):
+        """Allow the user to add an entry to the Food Dictionary file."""
         self.add_to_fd_win = EditFoodDictWin()
         self.add_to_fd_win.show()
         self.close()
 
     def remove_entries_confirmation(self):
-        """Display a dialog box that asks the user for confirmation to delete the selected food dictionary entries."""
+        """Display a dialog box that asks the user for confirmation to delete the selected Food Dictionary entries."""
         if not os.path.exists(FD_PATH):
             self.mess_win = MessageWin('fd file not found (fd window)')
             self.mess_win.show()
@@ -1428,23 +1437,25 @@ class FoodDictWin(QDialog):
             else:
                 self.dlg = QDialog(self)
                 self.dlg.setFixedWidth(350)
-                message = QLabel("Are you sure you want to delete the selected entries from the food dictionary? "
+                message = QLabel("Are you sure you want to delete the selected entries from the Food Dictionary? "
                                  "This can't be undone.", self)
                 message.setWordWrap(True)
-                yes_btn = QPushButton("Yes", self)
-                yes_btn.setFixedSize(85, 27)
-                yes_btn.clicked.connect(self.remove_entries_from_fd)
-                no_btn = QPushButton("Nevermind", self)
-                no_btn.setFixedSize(85, 27)
-                no_btn.clicked.connect(self.close_win)
+                self.yes_btn = QPushButton("Yes", self)
+                self.yes_btn.setFixedSize(85, 27)
+                self.yes_btn.clicked.connect(self.remove_entries_from_fd)
+                self.no_btn = QPushButton("Nevermind", self)
+                self.no_btn.setFixedSize(85, 27)
+                self.no_btn.clicked.connect(self.close_win)
                 main_layout = QVBoxLayout()
+                self.dlg.setLayout(main_layout)
+
                 btn_layout = QHBoxLayout()
-                btn_layout.addWidget(yes_btn)
-                btn_layout.addWidget(no_btn)
+                btn_layout.addWidget(self.yes_btn)
+                btn_layout.addWidget(self.no_btn)
                 main_layout.addWidget(message)
                 main_layout.addLayout(btn_layout)
                 main_layout.setSpacing(20)
-                self.dlg.setLayout(main_layout)
+
                 self.dlg.setStyleSheet('''
                 QDialog {
                     background-color: rgb(255, 250, 230);
@@ -1469,7 +1480,7 @@ class FoodDictWin(QDialog):
                 self.dlg.show()
 
     def remove_entries_from_fd(self):
-        """Get a list of the unchecked entries in the food dictionary table, then overwrite the food dictionary file
+        """Get a list of the unchecked entries in the Food Dictionary table, then overwrite the Food Dictionary file
         with those entries, removing the checked entries. If there are no selected entries, prompt the user to select
         at least one.
         """
@@ -1486,24 +1497,24 @@ class FoodDictWin(QDialog):
 
         self.close_win()
         current_geo = self.geometry()
-        self.logs_win = FoodDictWin(current_geo)
-        self.logs_win.show()
+        self.fd_win = FoodDictWin(current_geo)
+        self.fd_win.show()
         self.close()
 
     def select_all(self):
-        """Select all entries in the food dictionary table widget."""
+        """Select all entries in the Food Dictionary table widget."""
         if not os.path.exists(FD_PATH):
             return
         data.select_all_entries(self.fd_table)
 
     def unselect_all(self):
-        """Unselect all entries in the food dictionary table widget."""
+        """Unselect all entries in the Food Dictionary table widget."""
         if not os.path.exists(FD_PATH):
             return
         data.unselect_all_entries(self.fd_table)
 
     def edit_entry(self):
-        """Get the name of the selected entry in the food dictionary table, then pass it to EditFoodDictWin to be
+        """Get the name of the selected entry in the Food Dictionary table, then pass it to EditFoodDictWin to be
         edited. If multiple entries or none are selected, prompt the user to select only one and try again.
         """
         if not os.path.exists(FD_PATH):
@@ -1522,30 +1533,32 @@ class FoodDictWin(QDialog):
         self.close()
 
     def confirm_delete_fd(self):
-        """Display a dialog box that asks user for confirmation to delete the food dictionary file."""
+        """Display a dialog box that asks user for confirmation to delete the Food Dictionary file."""
         if not os.path.exists(FD_PATH):
             self.mess_win = MessageWin('fd file not found (fd window)')
             self.mess_win.show()
         else:
             self.dlg = QDialog(self)
             self.dlg.setFixedWidth(350)
-            message = QLabel("Are you sure you want to delete all entries from the food dictionary? This can't be "
+            message = QLabel("Are you sure you want to delete all entries from the Food Dictionary? This can't be "
                              "undone.", self)
             message.setWordWrap(True)
-            yes_btn = QPushButton("Yes", self)
-            yes_btn.setFixedSize(85, 27)
-            yes_btn.clicked.connect(self.delete_fd)
-            no_btn = QPushButton("Nevermind", self)
-            no_btn.setFixedSize(85, 27)
-            no_btn.clicked.connect(self.close_win)
+            self.yes_btn = QPushButton("Yes", self)
+            self.yes_btn.setFixedSize(85, 27)
+            self.yes_btn.clicked.connect(self.delete_fd)
+            self.no_btn = QPushButton("Nevermind", self)
+            self.no_btn.setFixedSize(85, 27)
+            self.no_btn.clicked.connect(self.close_win)
             main_layout = QVBoxLayout()
+            self.dlg.setLayout(main_layout)
+
             btn_layout = QHBoxLayout()
-            btn_layout.addWidget(yes_btn)
-            btn_layout.addWidget(no_btn)
+            btn_layout.addWidget(self.yes_btn)
+            btn_layout.addWidget(self.no_btn)
             main_layout.addWidget(message)
             main_layout.addLayout(btn_layout)
             main_layout.setSpacing(20)
-            self.dlg.setLayout(main_layout)
+
             self.dlg.setStyleSheet('''
                 QDialog {
                 background-color: rgb(255, 250, 230);
@@ -1570,7 +1583,7 @@ class FoodDictWin(QDialog):
             self.dlg.show()
 
     def delete_fd(self):
-        """Delete the food dictionary file and take the user to the food dictionary view screen."""
+        """Delete the Food Dictionary file and take the user to the Food Dictionary view screen."""
         os.remove(FD_PATH)
         self.close_win()
         current_geo = self.geometry()
@@ -1579,12 +1592,12 @@ class FoodDictWin(QDialog):
         self.close()
 
     def close_win(self):
-        """Close the dialog box that asks for confirmation to delete the food dictionary file."""
+        """Close the dialog box that asks for confirmation to delete the Food Dictionary file."""
         self.dlg.close()
 
 
 class EditFoodDictWin(QDialog):
-    """Allow the user to add or edit entries in the food dictionary. If an entry name is passed, then the information
+    """Allow the user to add or edit entries in the Food Dictionary. If an entry name is passed, then the information
     originally provided by the user is placed into the proper fields, allowing the user to edit the already existing
     entry.
     """
@@ -1592,7 +1605,7 @@ class EditFoodDictWin(QDialog):
     def __init__(self, edit_entry_name=None):
         """Constructor
 
-        :param edit_entry_name: string name of the food dictionary entry to be edited by the user. Default is None.
+        :param edit_entry_name: string name of the Food Dictionary entry to be edited by the user. Default is None.
         """
         super().__init__()
         self.w = 700
@@ -1612,10 +1625,12 @@ class EditFoodDictWin(QDialog):
         self.resize(self.w, self.h)
 
         main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
+
         self.info1_layout = QFormLayout()
         self.info2_layout = QFormLayout()
         exp = QLabel("Please enter the information below, then click the 'Add entry' button to add the entry "
-                     "to the food dictionary.\n\n"
+                     "to the Food Dictionary.\n\n"
                      "Many food labels provide multiple ways of measuring a serving. You may enter up to three, "
                      "but only one is required. Some serving sizes may be measured by item instead of weight "
                      "or volume. For example, one apple is one serving. As another example, two small candy "
@@ -1705,45 +1720,45 @@ class EditFoodDictWin(QDialog):
         cost_layout.addWidget(servings_label)
         self.info2_layout.addRow(self.tr('Cost'), cost_layout)
 
+        info1_w = QWidget()
+        info1_w.setLayout(self.info1_layout)
+        info2_w = QWidget()
+        info2_w.setLayout(self.info2_layout)
+        info12_w = QWidget()
+
         self.info1_layout.setLabelAlignment(Qt.AlignRight)
         self.info2_layout.setLabelAlignment(Qt.AlignRight)
 
-        info1_w = QWidget()
-        info2_w = QWidget()
-        info12_w = QWidget()
-
-        info1_w.setLayout(self.info1_layout)
-        info2_w.setLayout(self.info2_layout)
         info12_layout = QHBoxLayout()
         info12_layout.addWidget(info1_w)
         info12_layout.addWidget(info2_w)
         info12_w.setLayout(info12_layout)
         info12_layout.setSpacing(50)
 
-        back_to_fd_win_btn = QPushButton('Cancel', self)
-        back_to_fd_win_btn.setFixedSize(100, 27)
-        back_to_fd_win_btn.clicked.connect(self.goto_fd_win)
-        done_btn = QPushButton(self)
-        done_btn.setFixedSize(100, 27)
-        done_btn.clicked.connect(self.add_or_edit_entry)
+        self.back_to_fd_win_btn = QPushButton('Cancel', self)
+        self.back_to_fd_win_btn.setFixedSize(100, 27)
+        self.back_to_fd_win_btn.clicked.connect(self.goto_fd_win)
+        self.done_btn = QPushButton(self)
+        self.done_btn.setFixedSize(100, 27)
+        self.done_btn.clicked.connect(self.add_or_edit_entry)
         if self.edit_entry_name:
-            done_btn.setText('Update entry')
+            self.done_btn.setText('Update entry')
         else:
-            done_btn.setText('Add entry')
+            self.done_btn.setText('Add entry')
 
         # Allow user to press Enter key to press the done button.
-        done_btn.setDefault(True)
-        btn_layout = QHBoxLayout()
-        btn_layout.addWidget(back_to_fd_win_btn)
-        btn_layout.addWidget(done_btn)
+        self.done_btn.setDefault(True)
         btn_w = QWidget()
-        btn_w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        btn_layout = QHBoxLayout()
         btn_w.setLayout(btn_layout)
+
+        btn_layout.addWidget(self.back_to_fd_win_btn)
+        btn_layout.addWidget(self.done_btn)
+        btn_w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         main_layout.addWidget(exp)
         main_layout.addWidget(info12_w)
         main_layout.addWidget(btn_w)
-        self.setLayout(main_layout)
 
         # If there is a string assigned to self.edit_entry_name, place that entry's current info into the input fields
         # so that the user knows what was originally input. Otherwise, all fields are left blank for the new entry.
@@ -1754,9 +1769,9 @@ class EditFoodDictWin(QDialog):
                     if entry[0] == self.edit_entry_name:
                         prev_data = entry
                         break
-            name_w = self.info1_layout.itemAt(1).widget()
-            name_w.setText(self.edit_entry_name)
-            name_w.setCursorPosition(0)
+            self.name_w = self.info1_layout.itemAt(1).widget()
+            self.name_w.setText(self.edit_entry_name)
+            self.name_w.setCursorPosition(0)
 
             serv_size_options = ast.literal_eval(prev_data[1])  # {amount1: unit1, amount2: unit2, ...}
             # Index of the items of the QFormLayout, corresponding to each QHBoxLayout with a QLineEdit.
@@ -1791,22 +1806,22 @@ class EditFoodDictWin(QDialog):
                 self.info2_layout.itemAt(19).itemAt(3).widget().setText(str(cost_list[1]))
         self.setStyleSheet('''
             QDialog {
-                background-color: rgb(255, 230, 140);
-                border: 2px solid rgb(255, 90, 10);
+                background-color: rgb(0, 0, 30);
             }
             QWidget {
                 font: 14px;
             }
             QLabel {
-                color: black;
+                color: white;
             }
             QPushButton {
-                color: black;
-                background-color: rgb(210, 210, 210);
+                font: 14px;
+                color: rgb(255, 255, 255);
+                background-color: rgb(70, 70, 70);
                 border-width: 2px;
                 border-style: outset;
                 border-radius: 5px;
-                border-color: rgb(70, 70, 70);
+                border-color: gray;
                 padding: 3px;
             }
             QLineEdit {
@@ -1820,15 +1835,15 @@ class EditFoodDictWin(QDialog):
             ''')
 
     def goto_fd_win(self):
-        """Take the user to the food dictionary window."""
+        """Take the user to the Food Dictionary window."""
         self.fd_win = FoodDictWin()
         self.fd_win.show()
         self.close()
 
     def add_or_edit_entry(self):
-        """Place all info provided by the user into a list and append it to the food dictionary csv file. If the
+        """Place all info provided by the user into a list and append it to the Food Dictionary csv file. If the
         user is editing an existing entry, remove the original entry. If the user has provided invalid or
-        insufficient information, display an error message. Once complete, take the user back to the food dictionary
+        insufficient information, display an error message. Once complete, take the user back to the Food Dictionary
         window to view the updated information.
         """
         entry = []
@@ -1994,7 +2009,7 @@ class MessageWin(QDialog):
                        f"entry instead of adding a new one.")
 
         elif self.key == "duplicate fd entry":
-            message = ("The entry name you have given matches an existing one found in the food dictionary. Please "
+            message = ("The entry name you have given matches an existing one found in the Food Dictionary. Please "
                        "enter a different name or edit the existing entry.")
 
         elif self.key == "no selected entries to remove":
@@ -2011,10 +2026,10 @@ class MessageWin(QDialog):
             message = "Please provide a valid number for the amounts."
 
         elif self.key == 'fd entry no longer exists':
-            # When the user tries to edit a log entry whose food dictionary entry has been deleted.
-            message = (f"The entry for '{self.entry_name}' has been removed from the food dictionary some time after "
+            # When the user tries to edit a log entry whose Food Dictionary entry has been deleted.
+            message = (f"The entry for '{self.entry_name}' has been removed from the Food Dictionary some time after "
                        f"the creation of this log. The log entry for '{self.entry_name}' is still tallied alongside "
-                       f"the other entries, but it can't be edited without a matching food dictionary entry.")
+                       f"the other entries, but it can't be edited without a matching Food Dictionary entry.")
 
         elif self.key == "no log entries selected to edit":
             message = "Please select at least one log entry to edit."
@@ -2040,17 +2055,17 @@ class MessageWin(QDialog):
 
         elif self.key == "fd file not found (fd window)":
             title = "File Not Found"
-            message = "There are currently no entries in the food dictionary."
+            message = "There are currently no entries in the Food Dictionary."
 
         elif self.key == "fd file not found (log window)":
             title = "File Not Found"
-            message = ("There are currently no entries in the food dictionary. Click the 'Go to food dictionary' "
+            message = ("There are currently no entries in the Food Dictionary. Click the 'Go to Food Dictionary' "
                        "button to add entries, which will be used to manage logs.")
 
         elif self.key == 'fd file not found (log window edit)':
             title = "File Not Found"
-            message = ("There are currently no entries in the food dictionary. To edit a log entry, there must "
-                       "be a matching food dictionary entry. Click the 'Go to food dictionary' button to add "
+            message = ("There are currently no entries in the Food Dictionary. To edit a log entry, there must "
+                       "be a matching Food Dictionary entry. Click the 'Go to Food Dictionary' button to add "
                        "add entries before editing a log.")
 
         elif self.key == "no next file":
@@ -2065,14 +2080,16 @@ class MessageWin(QDialog):
         message_label = QLabel(message, self)
         message_label.setWordWrap(True)
         message_label.setAlignment(Qt.AlignLeft)
-        ok_btn = QPushButton('Ok', self)
-        ok_btn.setFixedSize(75, 27)
-        ok_btn.clicked.connect(self.close_win)
+        self.ok_btn = QPushButton('Ok', self)
+        self.ok_btn.setFixedSize(75, 27)
+        self.ok_btn.clicked.connect(self.close_win)
+
         layout = QVBoxLayout()
-        layout.addWidget(message_label, alignment=Qt.AlignVCenter)
-        layout.addWidget(ok_btn, alignment=Qt.AlignRight)
-        layout.setSpacing(20)
         self.setLayout(layout)
+        layout.addWidget(message_label, alignment=Qt.AlignVCenter)
+        layout.addWidget(self.ok_btn, alignment=Qt.AlignRight)
+        layout.setSpacing(20)
+
         self.setStyleSheet('''
             QDialog {
                 background-color: rgb(255, 250, 230);

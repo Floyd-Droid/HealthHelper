@@ -17,7 +17,7 @@ Project GitHub link: https://github.com/Floyd-Droid/HealthHelper
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
-from healthhelper.interface import LogsWin
+from healthhelper.interface import LogWin
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     # Remove the 'help' button from all windows.
     app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
-    main_win = LogsWin()
+    main_win = LogWin()
     main_win.show()
 
     sys.exit(app.exec_())

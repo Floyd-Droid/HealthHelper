@@ -212,9 +212,7 @@ def calculate_entry_info(entries_to_modify, user_input_amounts, tally=False, edi
             serv_size = serv_size_options[input_unit]
             num_of_servings = float(input_amount) / float(serv_size)
 
-        edited_entry = []
-        edited_entry.append(entries_to_modify[entry_num][0])
-        edited_entry.append([input_amount, input_unit])
+        edited_entry = [entries_to_modify[entry_num][0], [input_amount, input_unit]]
 
         # Delete [total_cost, total_servings] from each entry. The rest of the values will be
         # multiplied by the number of servings.

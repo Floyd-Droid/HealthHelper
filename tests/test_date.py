@@ -41,6 +41,22 @@ class TestDate(unittest.TestCase):
         self.assertEqual(log_win.month_combobox.currentText(), "October")
         self.assertEqual(log_win.year_textbox.text(), "2019")
 
+    def test_invalid_year(self):
+        """MessageWin should be called if the user provides an invalid year."""
+        log_win = interface.LogWin()
+        log_win.year_textbox.setText("2")
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(log_win.change_log_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_invalid_day(self):
+        """MessageWin should be called if the user provides an invalid day of the month."""
+        log_win = interface.LogWin()
+        log_win.day_textbox.setText("42")
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(log_win.change_log_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
     @patch('healthhelper.interface.LOG_FILES_DIR', TEST_LOG_FILE_DIR)
     def test_next_log_file(self):
         test_date = interface.datetime.date(2020, 6, 30)

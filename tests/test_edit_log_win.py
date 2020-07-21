@@ -1,4 +1,4 @@
-"""Test the EditLogWin widget."""
+"""Test the Log Window edit widget."""
 
 import os
 import unittest
@@ -80,6 +80,46 @@ class TestEditLogWin(unittest.TestCase):
                 patch.object(interface, 'LogWin') as log_win_mock:
             QTest.mouseClick(edit_log_win.update_btn, Qt.LeftButton)
             log_win_mock.assert_called()
+
+    def test_duplicate_entry_selected_to_add(self):
+        """MessageWin should be called if the user attempts to add a duplicate item to a log."""
+        edit_log_win = interface.EditLogWin(self.edit_date, TEST_LOG_PATH, self.edit_geo, edit=False)
+        # Select 'cereal', which is already in the log.
+        edit_log_win.edit_table.item(0, 0).setCheckState(2)
+        amount_cell_widget = edit_log_win.edit_table.cellWidget(0, 1)
+        amount_cell_widget.layout().itemAt(0).widget().setText('5')
+        with patch('healthhelper.interface.open', mock_open()), \
+                patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_log_win.update_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_adding_nonfloat_amount_to_log(self):
+        """MessageWin should be called if the user provides a non-float amount to add."""
+        edit_log_win = interface.EditLogWin(self.edit_date, TEST_LOG_PATH, self.edit_geo, edit=False)
+        edit_log_win.edit_table.item(0, 0).setCheckState(2)
+        amount_cell_widget = edit_log_win.edit_table.cellWidget(0, 1)
+        amount_cell_widget.layout().itemAt(0).widget().setText('.')
+        with patch('healthhelper.interface.open', mock_open()), \
+                patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_log_win.update_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_no_amount_provided_to_add(self):
+        """MessageWin should be called if the user doesn't provide an amount to add for a selected entry."""
+        edit_log_win = interface.EditLogWin(self.edit_date, TEST_LOG_PATH, self.edit_geo, edit=False)
+        edit_log_win.edit_table.item(0, 0).setCheckState(2)
+        with patch('healthhelper.interface.open', mock_open()), \
+                patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_log_win.update_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_no_selected_entries_to_add(self):
+        """MessageWin should be called if the user clicks the update button without selecting any entries to add."""
+        edit_log_win = interface.EditLogWin(self.edit_date, TEST_LOG_PATH, self.edit_geo, edit=False)
+        with patch('healthhelper.interface.open', mock_open()), \
+                patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_log_win.update_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
 
     def test_edit_log_entries(self):
         """Check that an entry in the log file is successfully edited."""

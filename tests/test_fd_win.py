@@ -1,4 +1,4 @@
-"""Test the FoodDictWin widget."""
+"""Test the Food Dictionary widget."""
 
 import os
 import unittest
@@ -25,6 +25,19 @@ class TestFoodDictWin(unittest.TestCase):
         with patch.object(interface, 'LogWin') as log_win_mock:
             QTest.mouseClick(fd_win.goto_log_win_btn, Qt.LeftButton)
             log_win_mock.assert_called()
+
+    @patch('healthhelper.interface.FD_PATH', TEST_FD_PATH)
+    def test_fd_win_table(self):
+        """Check that all entries in the table are checked or unchecked after clicking the
+        'select all' and 'unselect all' buttons."""
+        fd_win = interface.FoodDictWin()
+        QTest.mouseClick(fd_win.select_all_btn, Qt.LeftButton)
+        for entry_index in range(fd_win.fd_table.rowCount()):
+            self.assertEqual(fd_win.fd_table.item(entry_index, 0).checkState(), 2)
+
+        QTest.mouseClick(fd_win.unselect_all_btn, Qt.LeftButton)
+        for entry_index in range(fd_win.fd_table.rowCount()):
+            self.assertEqual(fd_win.fd_table.item(entry_index, 0).checkState(), 0)
 
     @patch('healthhelper.interface.FD_PATH', 'nonexistent_path')
     def test_delete_fd_with_no_fd_file(self):

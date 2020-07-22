@@ -1,4 +1,4 @@
-"""Test the EditFoodDictWin widget."""
+"""Test the Food Dictionary edit widget."""
 
 import os
 import unittest
@@ -61,6 +61,50 @@ class TestEditFoodDictWin(unittest.TestCase):
             QTest.mouseClick(edit_fd_win.done_btn, Qt.LeftButton)
             open_mock.assert_called()
             fd_win_mock.assert_called()
+
+    def test_no_name_given(self):
+        """MessageWin should be called if no name is provided."""
+        edit_fd_win = interface.EditFoodDictWin()
+        # Blank name field.
+        edit_fd_win.info1_layout.itemAt(1).widget().setText('')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(0).widget().setText('2')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(1).widget().setCurrentText('oz')
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_fd_win.done_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    @patch('healthhelper.interface.FD_PATH', TEST_FD_PATH)
+    def test_duplicate_name_given(self):
+        """MessageWin should be called if the user provides an already existing entry name when adding an entry."""
+        edit_fd_win = interface.EditFoodDictWin()
+        edit_fd_win.info1_layout.itemAt(1).widget().setText('cereal')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(0).widget().setText('2')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(1).widget().setCurrentText('oz')
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_fd_win.done_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_no_serving_size_given(self):
+        """MessageWin should be called if the user doesn't provide an amount."""
+        edit_fd_win = interface.EditFoodDictWin()
+        edit_fd_win.info1_layout.itemAt(1).widget().setText('cereal')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(0).widget().setText('')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(1).widget().setCurrentText('oz')
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_fd_win.done_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
+
+    def test_nonfloat_amount_given(self):
+        """MessageWin should be called if the user gives a non-float amount."""
+        # There is a validator on the amount input field, but the user can still enter some
+        # non-float values, such as a decimal.
+        edit_fd_win = interface.EditFoodDictWin()
+        edit_fd_win.info1_layout.itemAt(1).widget().setText('cereal')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(0).widget().setText('.')
+        edit_fd_win.info1_layout.itemAt(3).itemAt(1).widget().setCurrentText('oz')
+        with patch.object(interface, 'MessageWin') as message_win_mock:
+            QTest.mouseClick(edit_fd_win.done_btn, Qt.LeftButton)
+            message_win_mock.assert_called()
 
 
 if __name__ == '__main__':

@@ -1,10 +1,12 @@
 """Test the data module."""
 import os
 import unittest
+from unittest.mock import patch
 
 from PyQt5.QtWidgets import QApplication
 
 from healthhelper import data
+from healthhelper import interface
 
 # Directory containing this file
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -14,6 +16,94 @@ TEST_FD_PATH = os.path.join(this_dir, 'test_files', 'test_food_dictionary_file.c
 TEST_LOG_PATH = os.path.join(this_dir, 'test_files', 'test_log_file.csv')
 
 app = QApplication([])
+
+
+class TestGetTableEntryNames(unittest.TestCase):
+    """get_table_entry_names() should return a list of lists: A list of all table entries, a list of the
+    selected entries, and a list of the unselected entries.
+    """
+
+    @patch('os.path.join', return_value=TEST_LOG_PATH)
+    def test_log_table(self, join_mock):
+        log_win = interface.LogWin()
+        # Select the first two entries
+        log_win.log_table.item(0, 0).setCheckState(2)
+        log_win.log_table.item(1, 0).setCheckState(2)
+
+        result = data.get_table_entry_names(log_win.log_table)
+        self.assertEqual(result[0], ['cereal', 'chocolate', 'peanut butter'])
+        self.assertEqual(result[1], ['cereal', 'chocolate'])
+        self.assertEqual(result[2], ['peanut butter'])
+
+    @patch('healthhelper.interface.FD_PATH', TEST_FD_PATH)
+    def test_fd_table(self):
+        fd_win = interface.FoodDictWin()
+        fd_win.fd_table.item(0, 0).setCheckState(2)
+        fd_win.fd_table.item(1, 0).setCheckState(2)
+
+        result = data.get_table_entry_names(fd_win.fd_table)
+        self.assertEqual(result[0], ['cereal', 'chocolate', 'oats', 'peanut butter'])
+        self.assertEqual(result[1], ['cereal', 'chocolate'])
+        self.assertEqual(result[2], ['oats', 'peanut butter'])
+
+    @patch('healthhelper.interface.FD_PATH', TEST_FD_PATH)
+    def test_log_edit_table(self):
+        log_win = interface.LogWin()
+        edit_geo = log_win.geometry()
+        edit_date = interface.datetime.date(2020, 4, 12)
+        edit_log_win = interface.EditLogWin(edit_date,
+                                            TEST_LOG_PATH,
+                                            edit_geo,
+                                            edit_entry_names=None,
+                                            edit=False)
+
+        edit_log_win.edit_table.item(0, 0).setCheckState(2)
+        edit_log_win.edit_table.item(1, 0).setCheckState(2)
+
+        result = data.get_table_entry_names(edit_log_win.edit_table)
+        self.assertEqual(result[0], ['cereal', 'chocolate', 'oats', 'peanut butter'])
+        self.assertEqual(result[1], ['cereal', 'chocolate'])
+        self.assertEqual(result[2], ['oats', 'peanut butter'])
+
+
+class TestGetEditLogAmounts(unittest.TestCase):
+
+    @patch('healthhelper.interface.FD_PATH', TEST_FD_PATH)
+    def setUp(self):
+        """Set up a table with four entries, two of which are checked. Provide amount information for each entry."""
+        log_win = interface.LogWin()
+        edit_geo = log_win.geometry()
+        edit_date = interface.datetime.date(2020, 4, 12)
+        self.edit_log_win = interface.EditLogWin(edit_date,
+                                                 TEST_LOG_PATH,
+                                                 edit_geo,
+                                                 edit_entry_names=None,
+                                                 edit=False)
+
+        self.edit_log_win.edit_table.item(0, 0).setCheckState(2)
+        self.edit_log_win.edit_table.item(1, 0).setCheckState(2)
+
+        self.edit_log_win.edit_table.cellWidget(0, 1).layout().itemAt(0).widget().setText('60')
+        self.edit_log_win.edit_table.cellWidget(0, 2).layout().itemAt(0).widget().setCurrentText('g')
+
+        self.edit_log_win.edit_table.cellWidget(1, 1).layout().itemAt(0).widget().setText('2')
+        self.edit_log_win.edit_table.cellWidget(1, 2).layout().itemAt(0).widget().setCurrentText('item(s)')
+
+        self.edit_log_win.edit_table.cellWidget(2, 1).layout().itemAt(0).widget().setText('0.5')
+        self.edit_log_win.edit_table.cellWidget(2, 2).layout().itemAt(0).widget().setCurrentText('cup')
+
+        self.edit_log_win.edit_table.cellWidget(3, 1).layout().itemAt(0).widget().setText('4')
+        self.edit_log_win.edit_table.cellWidget(3, 2).layout().itemAt(0).widget().setCurrentText('tbsp')
+
+    def test_checked(self):
+        """Test with checked=True. Only selected entry amounts are returned."""
+        result = data.get_edit_log_amounts(self.edit_log_win.edit_table, checked=True)
+        self.assertEqual(result, [['60', 'g'], ['2', 'item(s)']])
+
+    def test_unchecked(self):
+        """Test with checked=False. All entry amounts are returned."""
+        result = data.get_edit_log_amounts(self.edit_log_win.edit_table, checked=False)
+        self.assertEqual(result, [['60', 'g'], ['2', 'item(s)'], ['0.5', 'cup'], ['4', 'tbsp']])
 
 
 class TestGetEntries(unittest.TestCase):

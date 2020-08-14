@@ -22,7 +22,7 @@ class TestDate(unittest.TestCase):
         """For default LogWin(), the current date should be placed into the date input fields."""
         log_win = interface.LogWin()
         today = interface.datetime.date.today()
-        self.assertEqual(log_win.day_textbox.text(), today.strftime('%d'))
+        self.assertEqual(log_win.day_textbox.text(), str(int(today.strftime('%d'))))
         self.assertEqual(log_win.month_combobox.currentText(), today.strftime('%B'))
         self.assertEqual(log_win.year_textbox.text(), str(today.year))
 

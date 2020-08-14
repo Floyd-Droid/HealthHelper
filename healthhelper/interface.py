@@ -76,7 +76,7 @@ class LogWin(QMainWindow):
         self.month_name = self.date.strftime('%B')
         self.year = str(self.date.year)
 
-        # Example log file path for June 12, 2020: /files/log files/2020/06 - June/12.csv
+        # Example log file path for June 12, 2020: healthhelper/files/log files/2020/06 - June/12.csv
         self.log_file_path = os.path.join(LOG_FILES_DIR, self.year, self.month + ' - '
                                           + self.month_name, self.day + '.csv')
         self.init_ui()
@@ -518,6 +518,7 @@ class LogWin(QMainWindow):
             for filename in filenames:
                 current_file_path = os.path.join(dirpath, filename)
                 all_pathnames.append(current_file_path)
+        all_pathnames.sort()
 
         # If the file corresponding to the currently selected date doesn't exist, use the position that the file
         # would have in the directory to find the previous available file that exists.
@@ -531,7 +532,7 @@ class LogWin(QMainWindow):
 
         # Extract date information from the log file's path name to create a date object.
         prev_file_path = all_pathnames[prev_file_index]
-        prev_file_info = prev_file_path.split('\\')
+        prev_file_info = prev_file_path.split(os.sep)
         year = int(prev_file_info[-3])
         # Convert month into an integer, ex: 01 becomes 1.
         month = int(prev_file_info[-2][0:2])
@@ -553,6 +554,7 @@ class LogWin(QMainWindow):
             for filename in filenames:
                 current_file_path = os.path.join(dirpath, filename)
                 all_pathnames.append(current_file_path)
+        all_pathnames.sort()
 
         # If the file corresponding to the currently selected date doesn't exist, use the position that the file
         # would have in the directory to find the next available file that exists.
@@ -567,7 +569,7 @@ class LogWin(QMainWindow):
             return
 
         # Extract date information from the log file's path name to create a date object.
-        next_file_info = next_file_path.split('\\')
+        next_file_info = next_file_path.split(os.sep)
         year = int(next_file_info[-3])
         # Convert month into an integer, ex: 01 becomes 1.
         month = int(next_file_info[-2][0:2])

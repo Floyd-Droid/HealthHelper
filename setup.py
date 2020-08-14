@@ -8,7 +8,7 @@ file_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Contents of README
 with open(os.path.join(file_dir, "README.md")) as f:
-      README = f.read()
+    README = f.read()
 
 setup(name='Health Helper',
       version='1.0.0',
@@ -23,7 +23,9 @@ setup(name='Health Helper',
       install_requires=['PyQt5'],
       classifiers=[
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
       ],
       entry_points={'console_scripts': 'healthhelper=healthhelper.__main__:main'}
       )
